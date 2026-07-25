@@ -1,0 +1,3692 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desa Sumberurip Kecamatan Doko</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- FontAwesome Icons for Beautiful Visuals -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Leaflet JS Map CSS for interactive maps -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                500: "#10b981",
+                600: "#059669",
+                700: "#047857",
+                800: "#065f46",
+                900: "#064e3b",
+              },
+              accent: { gold: "#d97706", goldLight: "#f59e0b" },
+            },
+          },
+        },
+      };
+    </script>
+    <!-- CSS kustom -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased"
+  >
+    <!-- Preloader -->
+    <div
+      id="app-preloader"
+      class="fixed inset-0 bg-primary-900 z-50 flex flex-col items-center justify-center text-white"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-400 mb-4"
+      ></div>
+      <h3 class="text-xl font-semibold tracking-wide">
+        Menghubungkan ke Portal Desa...
+      </h3>
+      <p class="text-emerald-300 text-sm mt-2">
+        Menyiapkan data dan peta spasial wilayah
+      </p>
+    </div>
+
+    <!-- Custom Notification Modal -->
+    <div
+      id="custom-modal"
+      class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black bg-opacity-50 hidden transition-all duration-300 opacity-0"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-all duration-300"
+      >
+        <div
+          class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mb-4 mx-auto"
+          id="modal-icon-container"
+        >
+          <i class="fa-solid fa-circle-check text-2xl" id="modal-icon"></i>
+        </div>
+        <h3
+          class="text-lg font-bold text-slate-900 text-center mb-2"
+          id="modal-title"
+        >
+          Berhasil!
+        </h3>
+        <p class="text-slate-600 text-sm text-center mb-6" id="modal-message">
+          Aksi Anda telah berhasil diproses.
+        </p>
+        <button
+          onclick="closeCustomModal()"
+          class="w-full py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl shadow-lg transition-all"
+        >
+          Mengerti
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal (Untuk Double-Check) -->
+    <div
+      id="confirmation-modal"
+      class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black bg-opacity-50 hidden transition-all duration-300 opacity-0"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl transform scale-95 transition-all duration-300"
+      >
+        <div
+          class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 text-amber-600 mb-4 mx-auto"
+          id="confirm-icon-container"
+        >
+          <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+        </div>
+        <h3
+          class="text-lg font-bold text-slate-900 text-center mb-2"
+          id="confirm-title"
+        >
+          Konfirmasi Aksi
+        </h3>
+        <p class="text-slate-600 text-sm text-center mb-6" id="confirm-message">
+          Apakah Anda yakin ingin melakukan aksi ini?
+        </p>
+        <div class="flex gap-3">
+          <button
+            onclick="cancelConfirmation()"
+            class="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold rounded-xl shadow-lg transition-all"
+          >
+            Batal
+          </button>
+          <button
+            onclick="proceedConfirmation()"
+            id="confirm-proceed-btn"
+            class="flex-1 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl shadow-lg transition-all"
+          >
+            Lanjutkan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Authenticity Viewer Modal -->
+    <div
+      id="cert-viewer-modal"
+      class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/75 hidden transition-all duration-300 opacity-0"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative transform scale-95 transition-all duration-300"
+      >
+        <button
+          onclick="closeCertViewer()"
+          class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full p-2 transition-all"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="text-center mb-5">
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 mb-1"
+            ><i class="fa-solid fa-shield-halved"></i> Jaminan Otentik
+            Desa</span
+          >
+          <h3 class="text-xl font-extrabold text-slate-900">
+            Sertifikat Verifikasi UMKM
+          </h3>
+          <p class="text-xs text-slate-500">
+            Telah ditinjau, teruji, dan disahkan oleh Pemerintah Desa Sumber
+            Urip
+          </p>
+        </div>
+        <div
+          class="border-4 border-double border-amber-500 p-2 rounded-2xl bg-amber-50/50 mb-4"
+        >
+          <img
+            id="modal-cert-img"
+            src=""
+            alt="Sertifikat UMKM"
+            class="w-full max-h-[380px] object-contain rounded-xl shadow-md"
+          />
+        </div>
+        <div class="text-center">
+          <p
+            class="text-xs text-emerald-700 font-semibold bg-emerald-50 py-2.5 px-4 rounded-xl border border-emerald-100 inline-block"
+          >
+            <i class="fa-solid fa-circle-check mr-1"></i> Produk Terjamin Aman,
+            Sehat, dan Asli Binaan Desa
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <header
+      class="sticky top-0 z-40 bg-white/95 backdrop-blur shadow-sm border-b border-slate-100"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+          <div
+            class="flex items-center gap-3 cursor-pointer"
+            onclick="navigateTo('home')"
+          >
+            <div
+              class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-md shadow-primary-200"
+            >
+              <img
+                src="logodesa.png"
+                alt="Logo Desa"
+                class="w-10 h-10 object-contain logo-crisp"
+              />
+            </div>
+            <div>
+              <span
+                class="text-xs font-bold tracking-widest text-emerald-600 uppercase"
+                >Portal Resmi</span
+              >
+              <h1 class="text-lg font-bold text-primary-900 leading-tight">
+                Desa Sumberurip
+              </h1>
+            </div>
+          </div>
+          <nav class="hidden md:flex items-center gap-1">
+            <button
+              onclick="navigateTo('home')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-home"
+            >
+              Beranda
+            </button>
+            <button
+              onclick="navigateTo('profile')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-profile"
+            >
+              Profil Desa
+            </button>
+            <button
+              onclick="navigateTo('umkm')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-umkm"
+            >
+              UMKM Unggulan
+            </button>
+            <button
+              onclick="navigateTo('wilayah')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-wilayah"
+            >
+              Wilayah Desa
+            </button>
+            <button
+              onclick="navigateTo('agenda')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-agenda"
+            >
+              Agenda Desa
+            </button>
+            <button
+              onclick="navigateTo('news')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-news"
+            >
+              Berita Desa
+            </button>
+            <button
+              onclick="navigateTo('lapor')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-lapor"
+            >
+              E-Lapor
+            </button>
+            <button
+              onclick="navigateTo('service')"
+              class="nav-link px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-primary-700 hover:bg-primary-50 transition-all"
+              id="nav-service"
+            >
+              Pelayanan Desa
+            </button>
+            <button
+              onclick="navigateTo('register-umkm')"
+              class="ml-2 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-700 hover:text-primary-700 bg-slate-100 hover:bg-primary-50 border border-slate-200 hover:border-primary-200 transition-all"
+              id="nav-register-umkm"
+            >
+              <i class="fa-solid fa-shopping-cart mr-1.5"></i> Mulai Usaha
+            </button>
+            <button
+              onclick="navigateTo('admin')"
+              class="ml-2 px-3 py-2.5 rounded-lg text-sm font-bold text-slate-700 hover:text-red-700 bg-slate-100 hover:bg-red-50 border border-slate-200 hover:border-red-100 transition-all"
+              id="nav-admin"
+            >
+              <i
+                class="fa-solid fa-user-shield mr-1.5 text-slate-500 hover:text-red-600"
+              ></i
+              >Admin Desa
+            </button>
+          </nav>
+          <button
+            onclick="toggleMobileMenu()"
+            class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition-all focus:outline-none"
+          >
+            <i class="fa-solid fa-bars text-2xl" id="menu-icon"></i>
+          </button>
+        </div>
+      </div>
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden bg-white border-b border-slate-100 px-4 pb-12 pt-4 space-y-2 transition-all max-h-[calc(100vh-80px)] overflow-y-auto shadow-lg"
+      >
+        <button
+          onclick="
+            navigateTo('home');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Beranda
+        </button>
+        <button
+          onclick="
+            navigateTo('profile');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Profil Desa
+        </button>
+        <button
+          onclick="
+            navigateTo('umkm');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          UMKM Unggulan
+        </button>
+        <button
+          onclick="
+            navigateTo('wilayah');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Wilayah Desa
+        </button>
+        <button
+          onclick="
+            navigateTo('agenda');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Agenda Desa
+        </button>
+        <button
+          onclick="
+            navigateTo('news');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Berita Desa
+        </button>
+        <button
+          onclick="
+            navigateTo('lapor');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          E-Lapor
+        </button>
+        <button
+          onclick="
+            navigateTo('service');
+            toggleMobileMenu();
+          "
+          class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-slate-700 hover:bg-primary-50 hover:text-primary-700"
+        >
+          Pelayanan Desa
+        </button>
+        <hr class="border-slate-100 my-2" />
+        <button
+          onclick="
+            navigateTo('register-umkm');
+            toggleMobileMenu();
+          "
+          class="block w-full text-center py-3 rounded-xl text-base font-bold text-slate-700 hover:text-primary-700 bg-slate-100 hover:bg-primary-50 border border-slate-200 hover:border-primary-200 shadow-md"
+        >
+          <i class="fa-solid fa-shopping-cart mr-2"></i> Mulai Usaha UMKM
+        </button>
+        <button
+          onclick="
+            navigateTo('admin');
+            toggleMobileMenu();
+          "
+          class="block w-full text-center py-3 rounded-xl text-base font-bold text-slate-700 bg-slate-100 hover:bg-red-50 hover:text-red-700 border border-slate-200 mt-2"
+        >
+          <i class="fa-solid fa-user-shield mr-2"></i> Dashboard Admin Desa
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-grow">
+      <!-- SECTION 1: HOME -->
+      <section id="section-home" class="page-section">
+        <div
+          class="hero-pattern min-h-screen py-24 px-4 sm:px-6 lg:px-8 text-center text-white relative overflow-hidden flex items-center justify-center"
+        >
+          <video
+            autoplay
+            muted
+            loop
+            class="absolute inset-0 w-full h-full object-cover"
+            poster="background.mp4"
+          >
+            <source src="background.mp4" type="video/mp4" />
+          </video>
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-emerald-950/30 to-emerald-950/50 z-5"
+          ></div>
+          <div class="relative max-w-4xl mx-auto z-10">
+            <h2
+              class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6 leading-tight animate-hero-slide"
+            >
+              Gerbang Digitalisasi <br /><span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-yellow-300"
+                >Desa Sumberurip Kec Doko</span
+              >
+            </h2>
+            <p
+              class="text-lg sm:text-xl text-slate-200 font-light mb-10 max-w-2xl mx-auto leading-relaxed animate-hero-fade"
+            >
+              Selamat datang di portal resmi desa kami. Bersama membangun
+              ekonomi kerakyatan berkelanjutan, memajukan pemerintahan, dan
+              mempromosikan produk lokal UMKM terjamin ke seluruh Nusantara.
+            </p>
+            <div
+              class="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            >
+              <button
+                onclick="navigateTo('umkm')"
+                class="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur hover:scale-105 transition-all"
+              >
+                <i class="fa-solid fa-store mr-2"></i> Belanja Produk UMKM
+              </button>
+              <button
+                onclick="navigateTo('wilayah')"
+                class="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-bold text-white bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur hover:scale-105 transition-all"
+              >
+                Lihat Peta Wilayah
+                <i class="fa-solid fa-map-location-dot ml-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10 mb-20"
+        >
+          <div
+            class="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-8"
+          >
+            <div
+              class="text-center p-4 border-r border-slate-100 last:border-0"
+            >
+              <div
+                class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fa-solid fa-users text-2xl"></i>
+              </div>
+              <h4
+                class="text-3xl font-extrabold text-slate-900"
+                id="stat-population"
+              >
+                3,450+
+              </h4>
+              <p class="text-sm font-semibold text-slate-500 mt-1">
+                Penduduk Aktif
+              </p>
+            </div>
+            <div
+              class="text-center p-4 lg:border-r border-slate-100 last:border-0"
+            >
+              <div
+                class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fa-solid fa-shop text-2xl"></i>
+              </div>
+              <h4 class="text-3xl font-extrabold text-slate-900" id="stat-umkm">
+                0
+              </h4>
+              <p class="text-sm font-semibold text-slate-500 mt-1">
+                UMKM Terverifikasi
+              </p>
+            </div>
+            <div
+              class="text-center p-4 border-r border-slate-100 last:border-0"
+            >
+              <div
+                class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fa-solid fa-handshake text-2xl"></i>
+              </div>
+              <h4
+                class="text-3xl font-extrabold text-slate-900"
+                id="stat-partners"
+              >
+                12+
+              </h4>
+              <p class="text-sm font-semibold text-slate-500 mt-1">
+                Kemitraan Daerah
+              </p>
+            </div>
+            <div class="text-center p-4">
+              <div
+                class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fa-solid fa-map text-2xl"></i>
+              </div>
+              <h4
+                class="text-3xl font-extrabold text-slate-900"
+                id="stat-rating"
+              >
+                12.5 km²
+              </h4>
+              <p class="text-sm font-semibold text-slate-500 mt-1">
+                Luas Wilayah
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4"
+          >
+            <div>
+              <span
+                class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+                >Pemberitahuan & Aktivitas</span
+              >
+              <h3
+                class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight"
+              >
+                Agenda Terkini & Gelar Kegiatan
+              </h3>
+              <p class="text-slate-500 text-sm mt-1">
+                Ikuti berbagai program kemajuan dan kemakmuran yang sedang
+                berlangsung di desa.
+              </p>
+            </div>
+            <button
+              onclick="navigateTo('agenda')"
+              class="px-5 py-2.5 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold text-sm rounded-xl flex items-center gap-2 transition-all"
+            >
+              Semua Agenda Desa <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+          </div>
+          <div
+            id="home-agenda-container"
+            class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4"
+          >
+            <div>
+              <span
+                class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+                >Berita Desa</span
+              >
+              <h3
+                class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight"
+              >
+                Berita Terkini dan Informasi Resmi Desa
+              </h3>
+              <p class="text-slate-500 text-sm mt-1">
+                Ikuti kabar terbaru, pengumuman, dan kegiatan desa yang penting
+                bagi seluruh warga.
+              </p>
+            </div>
+            <button
+              onclick="navigateTo('news')"
+              class="px-5 py-2.5 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold text-sm rounded-xl flex items-center gap-2 transition-all"
+            >
+              Semua Berita Desa <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+          </div>
+          <div
+            id="home-news-container"
+            class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          ></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
+          <div
+            class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 sm:p-12 shadow-md border border-slate-100 flex flex-col lg:flex-row items-center gap-12"
+          >
+            <div class="w-full lg:w-1/3 flex flex-col items-center">
+              <div class="relative group">
+                <div
+                  class="absolute -inset-1.5 bg-gradient-to-tr from-emerald-600 to-yellow-500 rounded-2xl blur opacity-35 group-hover:opacity-75 transition-all duration-300"
+                ></div>
+                <img
+                  id="kades-photo-welcome"
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=500&q=80"
+                  alt="Kepala Desa"
+                  class="relative rounded-2xl w-64 h-80 object-cover shadow-md"
+                />
+              </div>
+              <div class="text-center mt-5">
+                <h3
+                  id="kades-name-welcome"
+                  class="text-xl font-bold text-slate-900"
+                >
+                  Ir. H. Joko Santoso
+                </h3>
+                <span
+                  id="kades-period-welcome"
+                  class="text-xs font-bold px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full inline-block mt-1"
+                  >Masa Jabatan: 2024 - 2030</span
+                >
+              </div>
+            </div>
+            <div class="w-full lg:w-2/3">
+              <span
+                class="text-emerald-600 font-bold uppercase tracking-wider text-xs block mb-2"
+                >Sambutan Kepala Desa</span
+              >
+              <h3
+                class="text-2xl sm:text-3xl font-bold text-slate-900 mb-6 leading-tight"
+              >
+                "Gotong Royong Menuju Desa Mandiri dan Berdaulat Ekonomi"
+              </h3>
+              <div
+                class="text-slate-600 leading-relaxed space-y-4 mb-8"
+                id="kades-bio-welcome"
+              >
+                <p>Assalamu'alaikum Wr. Wb. Salam sejahtera bagi kita semua.</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"
+                >
+                  <i class="fa-solid fa-quote-left"></i>
+                </div>
+                <span class="font-semibold text-slate-900"
+                  >Maju Negeriku, Sejahtera Desaku!</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section
+        id="section-news"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+            >Berita Desa</span
+          >
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            Kabar Terbaru Desa Sumberurip
+          </h2>
+          <p class="text-slate-600">
+            Sajian berita resmi desa, informasi penting program, dan pengumuman
+            warga yang selalu diperbarui.
+          </p>
+        </div>
+        <div
+          class="grid lg:grid-cols-3 gap-8"
+          id="news-catalog-container"
+        ></div>
+        <div
+          id="news-empty-state"
+          class="hidden text-center py-20 text-slate-400"
+        >
+          <i class="fa-solid fa-newspaper text-4xl mb-3 block"></i>
+          <span>Tidak ada berita desa pada saat ini. Cek kembali nanti.</span>
+        </div>
+      </section>
+      <!-- SECTION 2: PROFIL DESA -->
+      <section
+        id="section-profile"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+            >Mengenal Lebih Dekat</span
+          >
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            Profil & Pemerintahan Desa
+          </h2>
+          <p class="text-slate-600">
+            Sejarah panjang peradaban, keindahan alam, serta komitmen para
+            aparatur desa yang berdedikasi tinggi demi melayani masyarakat
+            secara maksimal.
+          </p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8 mb-20">
+          <div
+            class="bg-gradient-to-tr from-primary-800 to-emerald-950 text-white rounded-3xl p-8 sm:p-10 shadow-lg relative overflow-hidden"
+          >
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+              <i class="fa-solid fa-eye"></i>
+            </div>
+            <span
+              class="text-emerald-300 font-bold tracking-widest text-xs uppercase"
+              >Aspirasi Bersama</span
+            >
+            <h3 class="text-2xl font-bold mt-2 mb-6">Visi Desa</h3>
+            <p class="text-lg text-emerald-100 font-light leading-relaxed">
+              "Mewujudkan Desa Sumberurip sebagai pusat agrowisata dan sentra
+              UMKM mandiri yang unggul, berdaya saing tinggi, adil, sejahtera,
+              religius, serta berbasis digital pada tahun 2030."
+            </p>
+          </div>
+          <div
+            class="bg-white rounded-3xl p-8 sm:p-10 shadow-md border border-slate-100 relative overflow-hidden"
+          >
+            <div
+              class="absolute -right-10 -bottom-10 opacity-5 text-9xl text-slate-900"
+            >
+              <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <span
+              class="text-primary-600 font-bold tracking-widest text-xs uppercase"
+              >Langkah Nyata</span
+            >
+            <h3 class="text-2xl font-bold text-slate-900 mt-2 mb-6">
+              Misi Desa
+            </h3>
+            <ul class="space-y-4 text-slate-600">
+              <li class="flex gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-xs"
+                  >1</span
+                ><span
+                  >Meningkatkan profesionalisme pelayanan publik desa berbasis
+                  sistem administrasi digital yang transparan dan cepat.</span
+                >
+              </li>
+              <li class="flex gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-xs"
+                  >2</span
+                ><span
+                  >Mendorong pemberdayaan ekonomi mikro melalui pendampingan
+                  intensif dan promosi UMKM berskala nasional.</span
+                >
+              </li>
+              <li class="flex gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-xs"
+                  >3</span
+                ><span
+                  >Melestarikan kearifan lokal, adat istiadat, serta
+                  meningkatkan kualitas kehidupan keagamaan yang harmonis.</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="mb-12">
+          <div
+            class="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4"
+          >
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900">
+                Struktur Pemerintahan Desa
+              </h3>
+              <p class="text-slate-500 text-sm mt-1">
+                Kabinet pelayanan berdedikasi tinggi untuk masa kepengurusan
+                aktif.
+              </p>
+            </div>
+            <span
+              class="px-4 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200"
+              ><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+              Data Terverifikasi Dinas</span
+            >
+          </div>
+          <div
+            class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8"
+            id="officers-container"
+          ></div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: WILAYAH -->
+      <section
+        id="section-wilayah"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div
+          class="bg-gradient-to-r from-emerald-950 to-primary-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl mb-12 relative overflow-hidden"
+        >
+          <div
+            class="absolute right-0 bottom-0 opacity-10 text-[10rem] translate-y-12 translate-x-6"
+          >
+            <i class="fa-solid fa-earth-asia"></i>
+          </div>
+          <span
+            class="text-emerald-300 font-bold tracking-widest text-xs uppercase"
+            ><i class="fa-solid fa-location-crosshairs mr-1"></i> Pemetaan
+            Geografis</span
+          >
+          <h2 class="text-3xl sm:text-5xl font-extrabold mt-2 mb-4">
+            Eksplorasi Teritorial
+          </h2>
+          <p
+            class="text-slate-200 text-base max-w-3xl font-light leading-relaxed"
+          >
+            Navigasi cerdas wilayah
+            <strong class="font-bold text-white">Desa Sumberurip</strong>.
+            Integrasi data geospasial real-time untuk transparansi publik dan
+            pemetaan fasilitas desa secara modern.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div class="lg:col-span-5 space-y-6">
+            <div
+              class="bg-white rounded-3xl p-6 shadow-md border border-slate-100"
+            >
+              <div class="flex items-center gap-4 mb-6">
+                <div
+                  class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-inner"
+                >
+                  <i class="fa-solid fa-compass text-2xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-950">
+                    Pusat Navigasi
+                  </h3>
+                  <p
+                    class="text-xs text-slate-500 font-semibold uppercase tracking-wider"
+                  >
+                    Koordinat Terverifikasi
+                  </p>
+                </div>
+              </div>
+              <div
+                class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100"
+              >
+                <span
+                  class="text-[10px] font-extrabold uppercase text-emerald-600 block mb-1"
+                  >Titik Pusat</span
+                >
+                <p
+                  class="text-sm font-bold text-slate-800 leading-relaxed"
+                  id="map-center-address"
+                >
+                  Kantor Kepala Desa Sumberurip
+                </p>
+              </div>
+              <div class="grid grid-cols-2 gap-4 mb-6">
+                <div
+                  class="p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                >
+                  <span
+                    class="text-[10px] font-extrabold text-slate-400 block uppercase mb-1"
+                    >Utara</span
+                  >
+                  <p
+                    class="text-sm font-bold text-slate-800"
+                    id="map-bound-north"
+                  >
+                    Loading...
+                  </p>
+                </div>
+                <div
+                  class="p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                >
+                  <span
+                    class="text-[10px] font-extrabold text-slate-400 block uppercase mb-1"
+                    >Timur</span
+                  >
+                  <p
+                    class="text-sm font-bold text-slate-800"
+                    id="map-bound-east"
+                  >
+                    Loading...
+                  </p>
+                </div>
+                <div
+                  class="p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                >
+                  <span
+                    class="text-[10px] font-extrabold text-slate-400 block uppercase mb-1"
+                    >Selatan</span
+                  >
+                  <p
+                    class="text-sm font-bold text-slate-800"
+                    id="map-bound-south"
+                  >
+                    Loading...
+                  </p>
+                </div>
+                <div
+                  class="p-4 bg-slate-50 rounded-2xl border border-slate-100"
+                >
+                  <span
+                    class="text-[10px] font-extrabold text-slate-400 block uppercase mb-1"
+                    >Barat</span
+                  >
+                  <p
+                    class="text-sm font-bold text-slate-800"
+                    id="map-bound-west"
+                  >
+                    Loading...
+                  </p>
+                </div>
+              </div>
+              <div
+                class="flex gap-3 bg-emerald-50 text-emerald-800 rounded-xl p-3.5 border border-emerald-100 text-xs mb-6"
+              >
+                <i
+                  class="fa-solid fa-circle-info text-base text-emerald-600 mt-0.5 shrink-0"
+                ></i>
+                <p class="leading-relaxed">
+                  Kontrol peta tersedia di pojok kanan untuk pengalaman navigasi
+                  terbaik.
+                </p>
+              </div>
+              <a
+                id="gmaps-btn-link"
+                href="#"
+                target="_blank"
+                class="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all"
+                ><i
+                  class="fa-solid fa-map-location text-lg text-emerald-400"
+                ></i>
+                Buka Google Maps</a
+              >
+            </div>
+          </div>
+          <div class="lg:col-span-7 relative">
+            <div
+              class="bg-white p-4 rounded-3xl shadow-md border border-slate-100"
+            >
+              <div
+                class="relative w-full h-[520px] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200"
+              >
+                <button
+                  onclick="toggleMapMode()"
+                  class="absolute top-4 right-4 z-[1000] px-4 py-2.5 bg-white/95 backdrop-blur hover:bg-white text-slate-800 font-bold text-xs rounded-xl shadow-lg border border-slate-200/50 flex items-center gap-1.5 transition-all"
+                >
+                  <i class="fa-solid fa-layer-group text-emerald-600"></i> GANTI
+                  MODE
+                </button>
+                <div id="map-canvas" class="w-full h-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- SECTION 3.5: AGENDA -->
+      <section
+        id="section-agenda"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+            >Informasi Transparan & Publikasi</span
+          >
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            Agenda & Dokumentasi Desa
+          </h2>
+          <p class="text-slate-600">
+            Telusuri program pembinaan, pembangunan teritorial, dan kemeriahan
+            dokumentasi festival warga Sumberurip secara transparan.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2 justify-center mb-12">
+          <button
+            onclick="filterAgenda('all')"
+            class="agenda-filter-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-primary-700 text-white"
+            id="agenda-filter-all"
+          >
+            <i class="fa-solid fa-calendar-days mr-1.5"></i> Semua Agenda
+          </button>
+          <button
+            onclick="filterAgenda('Mendatang')"
+            class="agenda-filter-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="agenda-filter-Mendatang"
+          >
+            <i class="fa-solid fa-hourglass-start mr-1.5 text-blue-500"></i>
+            Mendatang
+          </button>
+          <button
+            onclick="filterAgenda('Berlangsung')"
+            class="agenda-filter-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="agenda-filter-Berlangsung"
+          >
+            <i
+              class="fa-solid fa-rotate-right mr-1.5 text-amber-500 animate-spin"
+            ></i>
+            Sedang Berlangsung
+          </button>
+          <button
+            onclick="filterAgenda('Selesai')"
+            class="agenda-filter-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="agenda-filter-Selesai"
+          >
+            <i class="fa-solid fa-circle-check mr-1.5 text-emerald-500"></i>
+            Telah Selesai
+          </button>
+        </div>
+        <div
+          class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          id="agenda-catalog-container"
+        ></div>
+        <div
+          id="agenda-empty-state"
+          class="hidden text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm max-w-xl mx-auto mt-6"
+        >
+          <div
+            class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <i class="fa-solid fa-calendar-xmark text-3xl"></i>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">
+            Tidak ada agenda dalam filter ini
+          </h4>
+          <p class="text-slate-500 text-sm mt-1">
+            Semua program terlaksana rapi atau belum dipublikasikan perangkat
+            desa.
+          </p>
+        </div>
+      </section>
+
+      <!-- SECTION 3.8: E-LAPOR -->
+      <section
+        id="section-lapor"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+            >Suara & Aduan Warga</span
+          >
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            E-Lapor Desa
+          </h2>
+          <p class="text-slate-600">
+            Portal layanan pengaduan warga aktif. Laporkan segala kendala
+            infrastruktur, kebersihan, keamanan, atau ketertiban di lingkungan
+            Anda untuk ditindaklanjuti secara cepat dan transparan oleh
+            Pemerintah Desa Sumberurip.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div class="lg:col-span-5">
+            <div
+              class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-100"
+            >
+              <h3
+                class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2"
+              >
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Kirim
+                Laporan Baru
+              </h3>
+              <form
+                id="form-lapor-complaint"
+                onsubmit="handleComplaintSubmission(event)"
+                class="space-y-4"
+              >
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Judul Pengaduan <span class="text-red-500">*</span></label
+                  ><input
+                    type="text"
+                    id="lap-title"
+                    required
+                    placeholder="Contoh: Lampu Jalan RT 02 Padam"
+                    class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Kategori <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    id="lap-category"
+                    required
+                    class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                  >
+                    <option value="">Pilih Kategori</option>
+                    <option value="Infrastruktur">
+                      Infrastruktur (Jalan, Jembatan, PJU)
+                    </option>
+                    <option value="Kebersihan">Kebersihan & Lingkungan</option>
+                    <option value="Keamanan">Keamanan & Ketertiban</option>
+                    <option value="Administrasi">
+                      Administrasi & Pelayanan
+                    </option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Lokasi Kejadian / Alamat Detail
+                    <span class="text-red-500">*</span></label
+                  ><input
+                    type="text"
+                    id="lap-location"
+                    required
+                    placeholder="Contoh: Jl. Mawar dekat Pos Kamling RT 01"
+                    class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Nomor WhatsApp Pelapor
+                    <span class="text-red-500">*</span></label
+                  ><input
+                    type="tel"
+                    id="lap-whatsapp"
+                    required
+                    placeholder="Contoh: 081234567890"
+                    class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                  />
+                  <p class="text-[11px] text-slate-400 mt-2">
+                    Nomor hanya dapat dilihat oleh Admin Desa untuk keperluan
+                    tindak lanjut. Kami menjaga kerahasiaan kontak Anda.
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Foto Bukti Fisik <span class="text-red-500">*</span></label
+                  >
+                  <div
+                    class="mt-1 flex justify-center px-4 pt-4 pb-5 border-2 border-slate-200 border-dashed rounded-xl hover:border-emerald-500 transition-all bg-slate-50 relative group"
+                  >
+                    <div class="space-y-1 text-center" id="upload-prompt-lap">
+                      <i
+                        class="fa-solid fa-camera text-2xl text-slate-400 group-hover:text-emerald-500 transition-all mb-1 block"
+                      ></i>
+                      <div class="flex text-xs text-slate-600 justify-center">
+                        <label
+                          for="lap-imageFile"
+                          class="relative cursor-pointer bg-white rounded-md font-semibold text-emerald-600 hover:text-emerald-500"
+                          ><span>Unggah Foto</span>
+                          <input
+                            id="lap-imageFile"
+                            type="file"
+                            accept="image/*"
+                            required
+                            class="sr-only"
+                            onchange="previewImage(this, 'preview-lap')"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div
+                      id="preview-lap-container"
+                      class="hidden absolute inset-0 bg-white rounded-xl flex items-center justify-center p-1"
+                    >
+                      <img
+                        id="preview-lap"
+                        src=""
+                        class="max-h-full rounded-lg object-contain"
+                      />
+                      <button
+                        type="button"
+                        onclick="
+                          clearUpload(
+                            'lap-imageFile',
+                            'preview-lap-container',
+                            'upload-prompt-lap',
+                          )
+                        "
+                        class="absolute top-1.5 right-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1 shadow transition-all"
+                      >
+                        <i class="fa-solid fa-trash text-[10px]"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1"
+                    >Isi Detail Pengaduan / Keluhan
+                    <span class="text-red-500">*</span></label
+                  ><textarea
+                    id="lap-desc"
+                    required
+                    rows="4"
+                    placeholder="Tuliskan secara lengkap urutan kendala, dampak bagi warga sekitar, atau harapan perbaikan..."
+                    class="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl shadow-md shadow-red-700/10 transition-all flex items-center justify-center gap-2"
+                >
+                  <i class="fa-solid fa-paper-plane"></i> Kirim Laporan Aduan
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="lg:col-span-7 space-y-6">
+            <div
+              class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-100"
+            >
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-slate-900">
+                  Aduan Warga Real-time
+                </h3>
+                <div
+                  class="flex gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs font-semibold"
+                  id="complaints-filter"
+                >
+                  <button
+                    onclick="filterComplaints('all')"
+                    class="px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-sm"
+                    id="btn-comp-all"
+                  >
+                    Semua
+                  </button>
+                  <button
+                    onclick="filterComplaints('Menunggu Tindakan')"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800"
+                    id="btn-comp-pending"
+                  >
+                    Baru
+                  </button>
+                  <button
+                    onclick="filterComplaints('Sedang Diproses')"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800"
+                    id="btn-comp-progress"
+                  >
+                    Proses
+                  </button>
+                  <button
+                    onclick="filterComplaints('Ditolak')"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800"
+                    id="btn-comp-rejected"
+                  >
+                    Ditolak
+                  </button>
+                  <button
+                    onclick="filterComplaints('Selesai Ditangani')"
+                    class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800"
+                    id="btn-comp-resolved"
+                  >
+                    Selesai
+                  </button>
+                </div>
+              </div>
+              <div id="complaints-feed-container" class="space-y-6"></div>
+              <div
+                id="complaints-empty-state"
+                class="hidden text-center py-12 text-slate-400"
+              >
+                <i class="fa-solid fa-paste text-4xl mb-3 block"></i
+                ><span>Belum ada laporan pengaduan pada filter ini.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- SECTION 4: GALERI UMKM -->
+      <section
+        id="section-umkm"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+            >Produk Kebanggaan Lokal</span
+          >
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            Galeri UMKM Utama
+          </h2>
+          <p class="text-slate-600">
+            Dukung perekonomian warga lokal. Hubungi penjual langsung melalui
+            WhatsApp atau kunjungi toko online resmi mereka yang telah
+            tersertifikasi aman oleh pihak desa!
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap gap-2 justify-center mb-12"
+          id="umkm-filters"
+        >
+          <button
+            onclick="filterUMKM('all')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-primary-700 text-white"
+            id="filter-all"
+          >
+            <i class="fa-solid fa-border-all mr-1.5"></i> Semua Produk
+          </button>
+          <button
+            onclick="filterUMKM('Makanan')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="filter-Makanan"
+          >
+            <i class="fa-solid fa-utensils mr-1.5 text-orange-500"></i> Kuliner
+            & Makanan
+          </button>
+          <button
+            onclick="filterUMKM('Kerajinan')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="filter-Kerajinan"
+          >
+            <i class="fa-solid fa-gift mr-1.5 text-purple-500"></i> Kerajinan
+            Tangan
+          </button>
+          <button
+            onclick="filterUMKM('Pertanian')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="filter-Pertanian"
+          >
+            <i class="fa-solid fa-wheat-awn mr-1.5 text-yellow-600"></i> Hasil
+            Bumi & Pertanian
+          </button>
+          <button
+            onclick="filterUMKM('Jasa')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="filter-Jasa"
+          >
+            <i class="fa-solid fa-bell-concierge mr-1.5 text-sky-500"></i> Jasa
+            & Konstruksi
+          </button>
+          <button
+            onclick="filterUMKM('Lainnya')"
+            class="category-btn px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm transition-all bg-white hover:bg-slate-100 text-slate-700"
+            id="filter-Lainnya"
+          >
+            <i class="fa-solid fa-box-open mr-1.5 text-rose-500"></i> Lainnya
+          </button>
+        </div>
+        <div
+          class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          id="umkm-catalog-container"
+        ></div>
+        <div
+          id="umkm-empty-state"
+          class="hidden text-center py-20 bg-white rounded-3xl border border-slate-100 shadow-sm max-w-xl mx-auto mt-6"
+        >
+          <div
+            class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <i class="fa-solid fa-store-slash text-3xl"></i>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">
+            Tidak ada produk dalam kategori ini
+          </h4>
+          <p class="text-slate-500 text-sm mt-1 mb-6">
+            Jadilah pionir pertama yang mempromosikan produk berkualitasmu di
+            sini!
+          </p>
+          <button
+            onclick="navigateTo('register-umkm')"
+            class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm rounded-xl shadow-md transition-all"
+          >
+            Daftar UMKM Sekarang
+          </button>
+        </div>
+      </section>
+
+      <!-- SECTION 5: PENDAFTARAN UMKM -->
+      <section
+        id="section-register-umkm"
+        class="page-section hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div
+          class="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-100 relative overflow-hidden"
+        >
+          <div
+            class="absolute right-0 top-0 w-36 h-36 bg-gradient-to-bl from-primary-100/40 to-transparent rounded-bl-full pointer-events-none"
+          ></div>
+          <div class="mb-10 text-center sm:text-left">
+            <span
+              class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+              >Gabung Sentra UMKM Desa</span
+            >
+            <h2 class="text-3xl font-extrabold text-slate-900 mt-1">
+              Daftarkan Usaha Anda
+            </h2>
+            <p class="text-slate-500 mt-2">
+              Daftarkan toko atau komoditas hasil bumi Anda. Agar calon pembeli
+              lebih percaya, sertakan link toko online serta sertifikat
+              kelayakan usaha Anda untuk divalidasi oleh dewan Admin Desa.
+            </p>
+          </div>
+          <form
+            id="form-register-umkm"
+            onsubmit="handleUMKMRegistration(event)"
+            class="space-y-6"
+          >
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >Nama Usaha / Produk
+                  <span class="text-red-500">*</span></label
+                ><input
+                  type="text"
+                  id="reg-name"
+                  required
+                  placeholder="Contoh: Beras Organik Sumberurip"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >Kategori Bisnis <span class="text-red-500">*</span></label
+                >
+                <select
+                  id="reg-category"
+                  required
+                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                >
+                  <option value="">Pilih Kategori</option>
+                  <option value="Makanan">Kuliner & Makanan</option>
+                  <option value="Kerajinan">Kerajinan Tangan</option>
+                  <option value="Pertanian">Hasil Bumi & Pertanian</option>
+                  <option value="Jasa">Jasa & Konstruksi</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >Nama Pemilik Usaha <span class="text-red-500">*</span></label
+                ><input
+                  type="text"
+                  id="reg-owner"
+                  required
+                  placeholder="Contoh: Ibu Siti Aminah"
+                  class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >No. WhatsApp Hubungan
+                  <span class="text-red-500">*</span></label
+                >
+                <div class="relative">
+                  <span
+                    class="absolute inset-y-0 left-0 flex items-center pl-4 font-bold text-slate-400 bg-slate-100 border-r border-slate-200 rounded-l-xl px-3"
+                    >+62</span
+                  >
+                  <input
+                    type="number"
+                    id="reg-phone"
+                    required
+                    placeholder="8123456789"
+                    class="w-full pl-20 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+                <span class="text-slate-400 text-xs mt-1 block"
+                  >Silakan masukkan angka tanpa angka 0 di depan (contoh:
+                  8123456789)</span
+                >
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >Link Toko Online</label
+                >
+                <div id="reg-store-urls-wrapper" class="space-y-3">
+                  <div class="relative">
+                    <span
+                      class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400"
+                      ><i class="fa-solid fa-globe"></i
+                    ></span>
+                    <input
+                      type="url"
+                      class="store-url-input w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                      placeholder="https://shopee.co.id/toko-sumber"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onclick="addStoreUrlField()"
+                  class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all text-sm font-semibold"
+                >
+                  <i class="fa-solid fa-plus"></i> Tambah Link Toko
+                </button>
+                <span class="text-slate-400 text-xs mt-2 block"
+                  >Masukkan satu atau beberapa link toko online seperti Shopee,
+                  Tokopedia, TikTok Shop, atau marketplace lain.</span
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2"
+                  >Sertifikat Kelayakan & Jaminan Desa</label
+                >
+                <div
+                  class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 relative group"
+                >
+                  <div
+                    class="w-12 h-12 rounded border border-slate-200 overflow-hidden shrink-0 bg-white flex items-center justify-center"
+                  >
+                    <img
+                      id="preview-cert-reg"
+                      src="https://placehold.co/100x100/d97706/ffffff?text=Sertifikat"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="flex-grow">
+                    <input
+                      type="file"
+                      id="reg-cert-file"
+                      accept="image/*"
+                      class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+                      onchange="previewImage(this, 'preview-cert-reg')"
+                    />
+                  </div>
+                </div>
+                <span class="text-slate-400 text-xs mt-1 block"
+                  >Sertifikat Halal, P-IRT, Organik Dinas, atau bukti rilis
+                  perangkat desa.</span
+                >
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >Foto Produk <span class="text-red-500">*</span></label
+              >
+              <div
+                class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-emerald-500 transition-all bg-slate-50 relative group"
+              >
+                <div class="space-y-1 text-center" id="upload-prompt-reg">
+                  <i
+                    class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 group-hover:text-emerald-500 transition-all mb-2 block"
+                  ></i>
+                  <div class="flex text-sm text-slate-600 justify-center">
+                    <label
+                      for="reg-imageFile"
+                      class="relative cursor-pointer bg-white rounded-md font-semibold text-emerald-600 hover:text-emerald-500 focus-within:outline-none"
+                      ><span>Pilih file gambar</span>
+                      <input
+                        id="reg-imageFile"
+                        name="reg-imageFile"
+                        type="file"
+                        accept="image/*"
+                        required
+                        class="sr-only"
+                        onchange="previewImage(this, 'preview-reg')"
+                      />
+                    </label>
+                    <p class="pl-1 text-slate-500">atau seret ke sini</p>
+                  </div>
+                  <p class="text-xs text-slate-400">
+                    Format gambar JPG, JPEG, atau PNG
+                  </p>
+                </div>
+                <div
+                  id="preview-reg-container"
+                  class="hidden absolute inset-0 bg-white rounded-xl flex items-center justify-center p-2"
+                >
+                  <img
+                    id="preview-reg"
+                    src=""
+                    class="max-h-full rounded-lg object-contain"
+                  />
+                  <button
+                    type="button"
+                    onclick="
+                      clearUpload(
+                        'reg-imageFile',
+                        'preview-reg-container',
+                        'upload-prompt-reg',
+                      )
+                    "
+                    class="absolute top-2 right-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-1.5 shadow transition-all"
+                  >
+                    <i class="fa-solid fa-trash text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >Deskripsi Produk & Pelayanan Usaha
+                <span class="text-red-500">*</span></label
+              ><textarea
+                id="reg-desc"
+                required
+                rows="4"
+                placeholder="Tuliskan detail keunikan produk Anda, sistem pengerjaan, pre-order, jam buka toko, serta detail pengiriman..."
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+              ></textarea>
+            </div>
+            <div class="flex items-start gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="reg-agree"
+                required
+                class="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 mt-0.5"
+              />
+              <label
+                for="reg-agree"
+                class="text-xs text-slate-500 leading-relaxed"
+                >Saya menjamin bahwa produk yang saya daftarkan adalah produk
+                asli buatan warga desa Sumberurip, halal/bebas pelanggaran
+                hukum, serta tunduk pada peraturan verifikasi manual oleh dewan
+                administrasi perangkat desa.</label
+              >
+            </div>
+            <div class="pt-4">
+              <button
+                type="submit"
+                class="w-full py-4 bg-gradient-to-r from-primary-600 to-emerald-700 hover:from-primary-700 hover:to-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-700/10 transition-all text-center"
+              >
+                <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Formulir
+                Pendaftaran
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+      <!-- SECTION 5.5: PELAYANAN DESA -->
+      <section
+        id="section-service"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span
+            class="text-emerald-600 font-bold uppercase tracking-wider text-xs"
+          >
+            Pelayanan Desa
+          </span>
+          <h2
+            class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 mb-4"
+          >
+            Login & Formulir Pelayanan Desa
+          </h2>
+          <p class="text-slate-600">
+            Warga masuk dengan NIK dan kata sandi untuk mengajukan permohonan
+            secara online. Admin desa membuat akun warga dan memvalidasi setiap
+            permohonan.
+          </p>
+        </div>
+        <div
+          id="service-login-panel"
+          class="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-100 max-w-2xl mx-auto"
+        >
+          <h3 class="text-xl font-bold text-slate-900 mb-4">Login Warga</h3>
+          <p class="text-slate-500 text-sm mb-8">
+            Silakan masuk dengan NIK dan kata sandi Anda untuk melihat formulir
+            layanan atau status permohonan.
+          </p>
+          <form onsubmit="handleServiceUserLogin(event)" class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >NIK</label
+              >
+              <input
+                type="text"
+                id="service-login-nik"
+                required
+                maxlength="20"
+                placeholder="3201123456789012"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-500 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >Kata Sandi</label
+              >
+              <input
+                type="password"
+                id="service-login-password"
+                required
+                placeholder="••••••••"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-emerald-500 outline-none transition-all"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full py-4 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-lg transition-all"
+            >
+              Masuk ke Pelayanan Desa
+            </button>
+          </form>
+        </div>
+        <div id="service-panel" class="hidden max-w-5xl mx-auto space-y-10">
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div
+              class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+            >
+              <h3 class="text-xl font-bold text-slate-900 mb-4">Ajukan DTKS</h3>
+              <p class="text-slate-500 text-sm mb-6">
+                Data Terpadu Kesejahteraan Sosial adalah layanan bantuan bagi
+                warga desa yang memenuhi syarat.
+              </p>
+              <div class="space-y-4">
+                <p class="text-sm text-slate-600">
+                  Untuk mengajukan DTKS, silakan klik tombol berikut. Formulir
+                  akan terbuka dalam pop-up.
+                </p>
+                <button
+                  onclick="openServiceModal('modal-dtks')"
+                  class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all"
+                >
+                  Ajukan DTKS
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+            >
+              <h3 class="text-xl font-bold text-slate-900 mb-4">
+                Ajukan Kredit Usaha Rakyat
+              </h3>
+              <p class="text-slate-500 text-sm mb-6">
+                Ajukan kredit usaha rakyat untuk modal usaha. Pastikan semua
+                dokumen lengkap agar permohonan cepat diproses.
+              </p>
+              <div class="space-y-4">
+                <p class="text-sm text-slate-600">
+                  Untuk mengajukan KUR, silakan klik tombol berikut. Formulir
+                  akan terbuka dalam pop-up.
+                </p>
+                <button
+                  onclick="openServiceModal('modal-kur')"
+                  class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all"
+                >
+                  Ajukan KUR
+                </button>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+          >
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+            >
+              <div>
+                <h3 class="text-xl font-bold text-slate-900">
+                  Riwayat Permohonan Saya
+                </h3>
+                <p class="text-slate-500 text-sm">
+                  Lihat status permohonan DTKS dan KUR yang sudah Anda kirim.
+                </p>
+              </div>
+              <button
+                onclick="handleServiceUserLogout()"
+                class="px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 font-semibold"
+              >
+                Keluar
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm border-collapse">
+                <thead
+                  class="bg-slate-50 text-slate-500 uppercase text-xs font-bold"
+                >
+                  <tr>
+                    <th class="py-3 px-4">Jenis</th>
+                    <th class="py-3 px-4">Judul</th>
+                    <th class="py-3 px-4">Tanggal</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-4">Catatan</th>
+                  </tr>
+                </thead>
+                <tbody id="service-requests-history-body"></tbody>
+              </table>
+            </div>
+            <div
+              id="service-requests-history-empty"
+              class="hidden text-center py-12 text-slate-400"
+            >
+              <i class="fa-solid fa-file-lines text-4xl mb-3"></i>
+              <span>Belum ada permohonan yang terkirim.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- SECTION 6: ADMIN PORTAL -->
+      <section
+        id="section-admin"
+        class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <!-- Login (Supabase Auth: Email + Password) -->
+        <div
+          id="admin-login-card"
+          class="max-w-md mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-100 text-center"
+        >
+          <div
+            class="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-6 shadow-md shadow-red-100"
+          >
+            <i class="fa-solid fa-lock text-3xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">
+            Akses Terbatas Admin Desa
+          </h3>
+          <p class="text-slate-500 text-sm mb-8 leading-relaxed">
+            Masuk dengan Email & Kata Sandi admin desa untuk mengelola
+            verifikasi UMKM, agenda, pengaduan, serta struktur aparatur desa.
+          </p>
+          <form onsubmit="handleAdminLogin(event)" class="space-y-5 text-left">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >Email Admin</label
+              ><input
+                type="email"
+                id="admin-email-input"
+                required
+                placeholder="admin@desa.id"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2"
+                >Kata Sandi</label
+              ><input
+                type="password"
+                id="admin-password-input"
+                required
+                placeholder="••••••••"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full py-4 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-lg shadow-primary-700/20 transition-all"
+            >
+              <i class="fa-solid fa-shield-halved mr-1.5"></i> Buka Dashboard
+            </button>
+            <p class="text-slate-400 text-xs text-center pt-1">
+              Akun admin dibuat di Supabase &rsaquo; Authentication &rsaquo;
+              Users.
+            </p>
+          </form>
+        </div>
+
+        <!-- Authenticated Dashboard -->
+        <div id="admin-dashboard-card" class="hidden">
+          <div class="flex flex-col lg:flex-row gap-8">
+            <div class="w-full lg:w-1/4 space-y-3">
+              <div
+                class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-center"
+              >
+                <div
+                  class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold"
+                >
+                  A
+                </div>
+                <h4 class="text-lg font-bold text-slate-900">
+                  Administrator Utama
+                </h4>
+                <span
+                  class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full inline-block mt-1"
+                  id="admin-email-label"
+                  >Sesi Terautentikasi</span
+                >
+                <hr class="border-slate-100 my-4" />
+                <button
+                  onclick="handleAdminLogout()"
+                  class="w-full py-2 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-bold text-sm rounded-lg transition-all"
+                >
+                  Keluar Sistem
+                  <i class="fa-solid fa-right-from-bracket ml-1"></i>
+                </button>
+              </div>
+              <div
+                class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-1"
+              >
+                <button
+                  onclick="switchAdminTab('requests')"
+                  id="tab-btn-requests"
+                  class="admin-tab-btn flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-primary-50 text-primary-700 w-full"
+                >
+                  <span
+                    ><i class="fa-solid fa-list-check mr-2"></i> Kelola &
+                    Verifikasi UMKM</span
+                  ><span
+                    id="admin-pending-count"
+                    class="px-2.5 py-0.5 rounded-full bg-primary-600 text-white text-xs font-bold"
+                    >0</span
+                  >
+                </button>
+                <button
+                  onclick="switchAdminTab('service-users')"
+                  id="tab-btn-service-users"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-users mr-2"></i> Manajemen Akun Warga
+                </button>
+                <button
+                  onclick="switchAdminTab('service-requests')"
+                  id="tab-btn-service-requests"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-file-lines mr-2"></i> Manajemen
+                  Permohonan
+                </button>
+                <button
+                  onclick="switchAdminTab('complaints-edit')"
+                  id="tab-btn-complaints-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-headset mr-2"></i> Kelola Laporan Warga
+                </button>
+                <button
+                  onclick="switchAdminTab('profile-edit')"
+                  id="tab-btn-profile-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-user-gear mr-2"></i> Edit Kepala Desa
+                </button>
+                <button
+                  onclick="switchAdminTab('stats-edit')"
+                  id="tab-btn-stats-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-chart-simple mr-2"></i> Edit Statistik
+                  Desa
+                </button>
+                <button
+                  onclick="switchAdminTab('officers-edit')"
+                  id="tab-btn-officers-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-users-gear mr-2"></i> Edit Perangkat
+                  Desa
+                </button>
+                <button
+                  onclick="switchAdminTab('map-edit')"
+                  id="tab-btn-map-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-map-location-dot mr-2"></i> Edit Peta &
+                  Wilayah
+                </button>
+                <button
+                  onclick="switchAdminTab('agenda-edit')"
+                  id="tab-btn-agenda-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-calendar-plus mr-2"></i> Edit Agenda
+                  Desa
+                </button>
+                <button
+                  onclick="switchAdminTab('news-edit')"
+                  id="tab-btn-news-edit"
+                  class="admin-tab-btn flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900 w-full"
+                >
+                  <i class="fa-solid fa-newspaper mr-2"></i> Kelola Berita Desa
+                </button>
+              </div>
+            </div>
+            <div class="w-full lg:w-3/4 animate-fade-in">
+              <!-- TAB 1: UMKM VERIFICATION -->
+              <div id="admin-tab-requests" class="admin-tab-content space-y-6">
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Daftar Tunggu Persetujuan UMKM
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Berikut adalah daftar pemilik toko mikro baru yang
+                    mendaftar. Mohon tinjau secara saksama kelayakan produk,
+                    link toko online, serta dokumen sertifikasi mereka.
+                  </p>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-4 px-4">Nama Produk / Toko</th>
+                          <th class="py-4 px-4">Kategori</th>
+                          <th class="py-4 px-4">Pemilik & WhatsApp</th>
+                          <th class="py-4 px-4 text-center">Sertifikat</th>
+                          <th class="py-4 px-4 text-center">Toko Online</th>
+                          <th class="py-4 px-4 text-center">Aksi Keputusan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-pending-table-body"></tbody>
+                    </table>
+                  </div>
+                  <div
+                    id="admin-no-requests"
+                    class="hidden text-center py-12 text-slate-400"
+                  >
+                    <i
+                      class="fa-solid fa-clipboard-check text-4xl mb-3 block"
+                    ></i
+                    ><span
+                      >Tidak ada antrean pendaftaran baru saat ini. Semua
+                      bersih!</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Daftar UMKM Aktif Terverifikasi
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Kelola produk UMKM yang saat ini sedang aktif tampil di
+                    website. Anda dapat menghapus produk yang dinilai tidak
+                    layak lagi atau jika stok barang sudah habis.
+                  </p>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-4 px-4">Nama Produk / Toko</th>
+                          <th class="py-4 px-4">Kategori</th>
+                          <th class="py-4 px-4">Pemilik & WhatsApp</th>
+                          <th class="py-4 px-4 text-center">Sertifikat</th>
+                          <th class="py-4 px-4 text-right">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-approved-table-body"></tbody>
+                    </table>
+                  </div>
+                  <div
+                    id="admin-no-approved"
+                    class="hidden text-center py-12 text-slate-400"
+                  >
+                    <i class="fa-solid fa-store-slash text-4xl mb-3 block"></i
+                    ><span
+                      >Belum ada UMKM terverifikasi yang aktif saat ini.</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div
+                id="admin-tab-service-users"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Manajemen Akun Warga
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Buat akun warga untuk layanan DTKS dan KUR. Warga hanya bisa
+                    masuk dengan NIK dan kata sandi yang Anda atur.
+                  </p>
+                  <div class="grid gap-6 lg:grid-cols-2">
+                    <div class="space-y-4">
+                      <h4 class="text-sm font-bold text-slate-900">
+                        Buat Akun Baru
+                      </h4>
+                      <form
+                        id="form-service-user-create"
+                        onsubmit="handleCreateServiceUser(event)"
+                        class="space-y-4"
+                      >
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-700 mb-1"
+                            >NIK</label
+                          >
+                          <input
+                            type="text"
+                            id="service-user-nik"
+                            required
+                            maxlength="20"
+                            placeholder="3201123456789012"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-700 mb-1"
+                            >Nama Lengkap</label
+                          >
+                          <input
+                            type="text"
+                            id="service-user-fullname"
+                            required
+                            placeholder="Nama Warga"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-700 mb-1"
+                            >WhatsApp</label
+                          >
+                          <input
+                            type="tel"
+                            id="service-user-whatsapp"
+                            required
+                            placeholder="081234567890"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-700 mb-1"
+                            >Kata Sandi</label
+                          >
+                          <input
+                            type="password"
+                            id="service-user-password"
+                            required
+                            placeholder="Minimal 8 karakter"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-emerald-500 transition-all"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          class="w-full py-3 bg-primary-700 hover:bg-primary-800 text-white rounded-xl font-bold transition-all"
+                        >
+                          Buat Akun Warga
+                        </button>
+                      </form>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-slate-900 mb-4">
+                        Daftar Akun Warga
+                      </h4>
+                      <div
+                        class="overflow-x-auto rounded-3xl border border-slate-100"
+                      >
+                        <table class="w-full text-left text-sm">
+                          <thead
+                            class="bg-slate-50 text-slate-500 uppercase text-xs font-bold"
+                          >
+                            <tr>
+                              <th class="py-3 px-4">NIK</th>
+                              <th class="py-3 px-4">Nama</th>
+                              <th class="py-3 px-4">WhatsApp</th>
+                              <th class="py-3 px-4">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="service-users-table-body"></tbody>
+                        </table>
+                      </div>
+                      <div
+                        id="service-users-empty"
+                        class="hidden py-6 text-center text-slate-400"
+                      >
+                        Belum ada akun warga yang dibuat.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="admin-tab-service-requests"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Manajemen Permohonan Pelayanan
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Tinjau permohonan DTKS dan KUR, ubah status, dan tambahkan
+                    catatan penolakan jika diperlukan.
+                  </p>
+                  <div
+                    id="service-request-status-form"
+                    class="hidden bg-slate-50 rounded-3xl p-6 border border-slate-200 mb-6"
+                  >
+                    <h4 class="text-sm font-bold text-slate-900 mb-3">
+                      Perbarui Status Permohonan
+                    </h4>
+                    <form
+                      onsubmit="handleServiceRequestStatusSubmit(event)"
+                      class="space-y-4"
+                    >
+                      <input type="hidden" id="edit-service-request-id" />
+                      <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Status</label
+                          >
+                          <select
+                            id="service-request-status-select"
+                            required
+                            onchange="
+                              toggleServiceRequestRejectionField(this.value)
+                            "
+                            class="w-full px-3 py-3 rounded-xl border border-slate-200 outline-none focus:border-emerald-500 transition-all"
+                          >
+                            <option value="Menunggu Validasi">
+                              Menunggu Validasi
+                            </option>
+                            <option value="Diproses">Diproses</option>
+                            <option value="Disetujui">Disetujui</option>
+                            <option value="Ditolak">Ditolak</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Nomor WhatsApp Pemohon</label
+                          >
+                          <input
+                            type="text"
+                            id="service-request-whatsapp"
+                            readonly
+                            class="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-100 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div class="mt-4">
+                        <label
+                          class="block text-xs font-semibold text-slate-600 mb-1"
+                        >
+                          Dokumen Pemohon
+                        </label>
+                        <p class="text-sm text-slate-500">
+                          <a
+                            id="service-request-doc-link"
+                            href="#"
+                            target="_blank"
+                            class="font-semibold text-primary-700 hover:underline"
+                            >Tidak ada dokumen</a
+                          >
+                        </p>
+                      </div>
+                      <div
+                        class="mt-4 bg-white rounded-3xl border border-slate-200 p-4"
+                      >
+                        <div class="mb-3 text-slate-900 font-bold text-sm">
+                          Detail Formulir Pemohon
+                        </div>
+                        <div class="grid gap-3 text-sm text-slate-700">
+                          <div>
+                            <span class="font-semibold">Jenis:</span>
+                            <span id="service-request-detail-type">-</span>
+                          </div>
+                          <div>
+                            <span class="font-semibold">Judul:</span>
+                            <span id="service-request-detail-title">-</span>
+                          </div>
+                          <div>
+                            <span class="font-semibold"
+                              >Alamat / Nama Usaha:</span
+                            >
+                            <span id="service-request-detail-address">-</span>
+                          </div>
+                          <div>
+                            <span class="font-semibold"
+                              >Kebutuhan / Tujuan:</span
+                            >
+                            <span id="service-request-detail-purpose">-</span>
+                          </div>
+                          <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                              <span class="font-semibold">Modal Diajukan:</span>
+                              <span id="service-request-detail-amount">-</span>
+                            </div>
+                            <div>
+                              <span class="font-semibold"
+                                >Tujuan Penggunaan Dana:</span
+                              >
+                              <span id="service-request-detail-fund-purpose"
+                                >-</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="service-request-rejection-field" class="hidden">
+                        <label
+                          class="block text-xs font-semibold text-slate-600 mb-1"
+                          >Alasan Penolakan</label
+                        >
+                        <textarea
+                          id="service-request-rejection"
+                          rows="3"
+                          class="w-full px-3 py-3 rounded-xl border border-slate-200 outline-none focus:border-red-500 transition-all"
+                          placeholder="Tuliskan alasan ditolak agar warga memahami keputusan."
+                        ></textarea>
+                      </div>
+                      <div class="flex justify-end gap-3 pt-2">
+                        <button
+                          type="button"
+                          onclick="closeServiceRequestStatusForm()"
+                          class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white rounded-xl font-semibold"
+                        >
+                          Simpan Status
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                      <thead
+                        class="bg-slate-50 text-slate-500 uppercase text-xs font-bold"
+                      >
+                        <tr>
+                          <th class="py-3 px-4">Jenis</th>
+                          <th class="py-3 px-4">Pemohon</th>
+                          <th class="py-3 px-4">NIK</th>
+                          <th class="py-3 px-4">WhatsApp</th>
+                          <th class="py-3 px-4">Dokumen</th>
+                          <th class="py-3 px-4">Status</th>
+                          <th class="py-3 px-4 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="service-requests-table-body"></tbody>
+                    </table>
+                  </div>
+                  <div
+                    id="service-requests-empty"
+                    class="hidden text-center py-12 text-slate-400"
+                  >
+                    <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+                    <span>Belum ada permohonan layanan di sistem.</span>
+                  </div>
+                </div>
+              </div>
+              <!-- TAB: COMPLAINTS MANAGEMENT -->
+              <div
+                id="admin-tab-complaints-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Manajemen Laporan Pengaduan Warga
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Tinjau aduan yang masuk dari masyarakat. Perbarui status
+                    secara real-time menjadi
+                    <strong>Sedang Diproses</strong> atau
+                    <strong>Selesai Ditangani</strong> (Anda dapat mengunggah
+                    bukti penyelesaian berupa foto).
+                  </p>
+                  <div
+                    id="complaint-status-form"
+                    class="hidden bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8 space-y-4"
+                  >
+                    <h4
+                      class="text-sm font-bold text-slate-800"
+                      id="complaint-status-title"
+                    >
+                      Perbarui Status Aduan
+                    </h4>
+                    <form
+                      onsubmit="handleComplaintStatusSubmit(event)"
+                      class="space-y-4"
+                    >
+                      <input type="hidden" id="edit-complaint-id" />
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Status Laporan</label
+                          >
+                          <select
+                            id="comp-status-select"
+                            required
+                            onchange="toggleResolutionPhotoInput(this.value)"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          >
+                            <option value="Menunggu Tindakan">
+                              Menunggu Tindakan (Baru)
+                            </option>
+                            <option value="Sedang Diproses">
+                              Sedang Diproses (On Progress)
+                            </option>
+                            <option value="Selesai Ditangani">
+                              Selesai Ditangani (Resolved)
+                            </option>
+                            <option value="Ditolak">Ditolak (Rejected)</option>
+                          </select>
+                        </div>
+                        <div id="resolution-photo-field" class="hidden">
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Foto Bukti Selesai (Opsional)</label
+                          >
+                          <div
+                            class="flex items-center gap-3 bg-white p-2 rounded-lg border border-slate-200"
+                          >
+                            <div
+                              class="w-10 h-10 rounded border border-slate-200 overflow-hidden shrink-0 bg-slate-50 flex items-center justify-center"
+                            >
+                              <img
+                                id="preview-comp-resolution"
+                                src=""
+                                onerror="
+                                  this.src =
+                                    'https://placehold.co/100x100?text=Bukti'
+                                "
+                                class="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div class="flex-grow">
+                              <input
+                                type="file"
+                                id="comp-resolutionFile"
+                                accept="image/*"
+                                class="block w-full text-xs text-slate-500 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700 cursor-pointer"
+                                onchange="
+                                  previewImage(this, 'preview-comp-resolution')
+                                "
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          id="rejection-reason-field"
+                          class="hidden sm:col-span-2"
+                        >
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Alasan / Catatan Penolakan</label
+                          >
+                          <textarea
+                            id="comp-rejection-reason"
+                            rows="4"
+                            class="w-full px-3 py-3 text-sm rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:border-red-500 transition-all"
+                            placeholder="Tuliskan alasan penolakan laporan agar pelapor memahami keputusan admin"
+                          ></textarea>
+                          <p class="text-[11px] text-slate-400 mt-2">
+                            Catatan ini hanya akan ditampilkan jika laporan
+                            ditolak.
+                          </p>
+                        </div>
+                      </div>
+                      <div class="flex justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          onclick="closeComplaintStatusForm()"
+                          class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white text-xs font-bold rounded-lg transition-all"
+                        >
+                          Simpan Perubahan
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-3 px-4">Laporan Aduan</th>
+                          <th class="py-3 px-4">Kategori & Lokasi</th>
+                          <th class="py-3 px-4">Tanggal Pengaduan</th>
+                          <th class="py-3 px-4">WhatsApp</th>
+                          <th class="py-3 px-4 text-center">Status</th>
+                          <th class="py-3 px-4 text-right">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-complaints-table-body"></tbody>
+                    </table>
+                  </div>
+                  <div
+                    id="admin-no-complaints"
+                    class="hidden text-center py-12 text-slate-400"
+                  >
+                    <i class="fa-solid fa-headset text-4xl mb-3 block"></i
+                    ><span>Tidak ada laporan pengaduan masuk saat ini.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB: EDIT KEPALA DESA -->
+              <div
+                id="admin-tab-profile-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Edit Profil Kepala Desa
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Perbarui profil pimpinan desa secara berkala sesuai hasil
+                    rotasi atau pilkades berkala guna menjamin keberlanjutan
+                    website.
+                  </p>
+                  <form onsubmit="handleKadesUpdate(event)" class="space-y-6">
+                    <div class="grid sm:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Nama Lengkap Kepala Desa
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-kades-name"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Masa Kepemimpinan (Periode)
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-kades-period"
+                          required
+                          placeholder="Contoh: 2024 - 2030"
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-semibold text-slate-700 mb-2"
+                        >Foto Kepala Desa
+                        <span class="text-red-500">*</span></label
+                      >
+                      <div
+                        class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200"
+                      >
+                        <div
+                          class="w-20 h-20 rounded-xl border border-slate-200 overflow-hidden shrink-0 bg-white flex items-center justify-center"
+                        >
+                          <img
+                            id="preview-kades-edit"
+                            src=""
+                            onerror="
+                              this.src =
+                                'https://placehold.co/100x120/064e3b/ffffff?text=Kades'
+                            "
+                            class="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div class="flex-grow">
+                          <input
+                            type="file"
+                            id="edit-kades-imageFile"
+                            accept="image/*"
+                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                            onchange="previewImage(this, 'preview-kades-edit')"
+                          /><span class="text-slate-400 text-xs mt-1.5 block"
+                            >Kosongkan jika tidak ingin mengubah foto saat
+                            ini.</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-semibold text-slate-700 mb-2"
+                        >Kata Sambutan & Profil Singkat
+                        <span class="text-red-500">*</span></label
+                      ><textarea
+                        id="edit-kades-bio"
+                        required
+                        rows="6"
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                      ></textarea>
+                    </div>
+                    <button
+                      type="submit"
+                      class="w-full py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-md transition-all"
+                    >
+                      <i class="fa-solid fa-save mr-1.5"></i> Simpan Perubahan
+                      Profil Kepala Desa
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- TAB: EDIT STATISTIK -->
+              <div
+                id="admin-tab-stats-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Edit Statistik Desa
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Sesuaikan data kuantitatif desa seperti jumlah penduduk
+                    aktif, total kemitraan, dan luas wilayah desa yang
+                    ditampilkan di halaman depan.
+                  </p>
+                  <form onsubmit="handleStatsUpdate(event)" class="space-y-6">
+                    <div class="grid sm:grid-cols-3 gap-6">
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Penduduk Aktif
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-stat-population"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Kemitraan Daerah
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-stat-partners"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Luas Wilayah
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-stat-rating"
+                          required
+                          placeholder="Contoh: 12.5 km²"
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      class="w-full py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-md transition-all"
+                    >
+                      <i class="fa-solid fa-save mr-1.5"></i> Simpan Perubahan
+                      Statistik
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <!-- TAB: EDIT PERANGKAT DESA -->
+              <div
+                id="admin-tab-officers-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <div class="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900">
+                        Manajemen Perangkat Desa
+                      </h3>
+                      <p class="text-slate-500 text-sm mt-1">
+                        Perbarui, tambah, atau hapus susunan staf aparatur sipil
+                        desa.
+                      </p>
+                    </div>
+                    <button
+                      onclick="openAddOfficerForm()"
+                      class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-xl transition-all"
+                    >
+                      <i class="fa-solid fa-plus mr-1"></i> Tambah Staf Baru
+                    </button>
+                  </div>
+                  <div
+                    id="officer-form-container"
+                    class="hidden bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8 space-y-4"
+                  >
+                    <h4
+                      class="text-sm font-bold text-slate-800"
+                      id="officer-form-title"
+                    >
+                      Tambah Aparatur Baru
+                    </h4>
+                    <form
+                      onsubmit="handleOfficerSubmit(event)"
+                      class="space-y-4"
+                    >
+                      <input type="hidden" id="edit-officer-id" />
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Nama Lengkap</label
+                          ><input
+                            type="text"
+                            id="off-name"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Jabatan</label
+                          ><input
+                            type="text"
+                            id="off-role"
+                            placeholder="Sekretaris / Bendahara / Kepala Dusun"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Periode Jabatan</label
+                          ><input
+                            type="text"
+                            id="off-period"
+                            placeholder="Contoh: 2024 - 2030"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Foto Aparatur</label
+                          >
+                          <div
+                            class="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-200"
+                          >
+                            <div
+                              class="w-10 h-10 rounded border border-slate-200 overflow-hidden shrink-0 bg-slate-50 flex items-center justify-center"
+                            >
+                              <img
+                                id="preview-officer-edit"
+                                src=""
+                                onerror="
+                                  this.src =
+                                    'https://placehold.co/100x100?text=Staf'
+                                "
+                                class="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div class="flex-grow">
+                              <input
+                                type="file"
+                                id="off-imageFile"
+                                accept="image/*"
+                                class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                                onchange="
+                                  previewImage(this, 'preview-officer-edit')
+                                "
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          onclick="closeOfficerForm()"
+                          class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white text-xs font-bold rounded-lg transition-all"
+                        >
+                          Simpan Staf
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-3 px-4">Nama Aparatur</th>
+                          <th class="py-3 px-4">Jabatan</th>
+                          <th class="py-3 px-4">Masa Kerja</th>
+                          <th class="py-3 px-4 text-right">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-officers-table-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB: EDIT MAPS -->
+              <div
+                id="admin-tab-map-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <h3 class="text-xl font-bold text-slate-900 mb-2">
+                    Edit Peta & Wilayah Desa
+                  </h3>
+                  <p class="text-slate-500 text-sm mb-6">
+                    Sesuaikan data spasial, titik pusat koordinat, serta batas
+                    administratif luar desa Sumberurip.
+                  </p>
+                  <form
+                    onsubmit="handleMapConfigUpdate(event)"
+                    class="space-y-6"
+                  >
+                    <div class="grid sm:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Latitude Titik Kantor Desa
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="number"
+                          step="any"
+                          id="edit-map-lat"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Longitude Titik Kantor Desa
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="number"
+                          step="any"
+                          id="edit-map-lng"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-semibold text-slate-700 mb-2"
+                        >Alamat Lengkap Titik Pusat
+                        <span class="text-red-500">*</span></label
+                      ><input
+                        type="text"
+                        id="edit-map-address"
+                        required
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                      />
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Batas Utara
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-map-north"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Batas Timur
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-map-east"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Batas Selatan
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-map-south"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Batas Barat
+                          <span class="text-red-500">*</span></label
+                        ><input
+                          type="text"
+                          id="edit-map-west"
+                          required
+                          class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-semibold text-slate-700 mb-2"
+                        >Tautan URL Buka Google Maps
+                        <span class="text-red-500">*</span></label
+                      ><input
+                        type="url"
+                        id="edit-map-gmaps"
+                        required
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white outline-none focus:border-emerald-500 transition-all"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      class="w-full py-3.5 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-md transition-all"
+                    >
+                      <i class="fa-solid fa-save mr-1.5"></i> Simpan Peta &
+                      Teritorial
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <!-- TAB: EDIT AGENDA -->
+              <div
+                id="admin-tab-agenda-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <div class="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900">
+                        Manajemen Agenda & Dokumentasi
+                      </h3>
+                      <p class="text-slate-500 text-sm mt-1">
+                        Perbarui, tambah, atau hapus susunan agenda dan
+                        dokumentasi foto kegiatan.
+                      </p>
+                    </div>
+                    <button
+                      onclick="openAddAgendaForm()"
+                      class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-xl transition-all"
+                    >
+                      <i class="fa-solid fa-plus mr-1"></i> Tambah Kegiatan Baru
+                    </button>
+                  </div>
+                  <div
+                    id="agenda-form-container"
+                    class="hidden bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8 space-y-4"
+                  >
+                    <h4
+                      class="text-sm font-bold text-slate-800"
+                      id="agenda-form-title"
+                    >
+                      Tambah Kegiatan Baru
+                    </h4>
+                    <form
+                      onsubmit="handleAgendaSubmit(event)"
+                      class="space-y-4"
+                    >
+                      <input type="hidden" id="edit-agenda-id" />
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Nama Kegiatan / Agenda</label
+                          ><input
+                            type="text"
+                            id="age-title"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Status Kegiatan</label
+                          >
+                          <select
+                            id="age-status"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          >
+                            <option value="Mendatang">Mendatang</option>
+                            <option value="Berlangsung">
+                              Sedang Berlangsung
+                            </option>
+                            <option value="Selesai">Telah Selesai</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Tanggal Kegiatan</label
+                          ><input
+                            type="text"
+                            id="age-date"
+                            placeholder="Contoh: 25 Juni 2026 atau YYYY-MM-DD"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Waktu / Jam</label
+                          ><input
+                            type="text"
+                            id="age-time"
+                            placeholder="Contoh: 09:00 WIB - Selesai"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Lokasi Kegiatan</label
+                          ><input
+                            type="text"
+                            id="age-location"
+                            placeholder="Contoh: Balai Desa / Lapangan Kebudayaan"
+                            required
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-xs font-semibold text-slate-600 mb-1"
+                            >Foto / Dokumentasi Kegiatan</label
+                          >
+                          <div
+                            class="bg-white p-3 rounded-2xl border border-slate-200"
+                          >
+                            <div
+                              id="preview-agenda-gallery"
+                              class="grid grid-cols-3 gap-3 mb-3"
+                            ></div>
+                            <div
+                              class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200"
+                            >
+                              <i class="fa-solid fa-image text-slate-400"></i>
+                              <div class="flex-1">
+                                <input
+                                  type="file"
+                                  id="age-imageFile"
+                                  accept="image/*"
+                                  multiple
+                                  class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                                  onchange="previewAgendaImages(this)"
+                                />
+                                <p class="text-[10px] text-slate-400 mt-2">
+                                  Pilih beberapa foto untuk galeri dokumentasi
+                                  agenda. Foto baru akan menggantikan preview
+                                  saat ini.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-xs font-semibold text-slate-600 mb-1"
+                          >Keterangan / Dokumentasi Tambahan</label
+                        ><textarea
+                          id="age-desc"
+                          required
+                          rows="3"
+                          placeholder="Deskripsikan program kegiatan atau rangkuman dokumentasi secara informatif..."
+                          class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 outline-none"
+                        ></textarea>
+                      </div>
+                      <div class="flex justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          onclick="closeAgendaForm()"
+                          class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white text-xs font-bold rounded-lg transition-all"
+                        >
+                          Simpan Agenda
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-3 px-4">Nama Kegiatan</th>
+                          <th class="py-3 px-4">Status</th>
+                          <th class="py-3 px-4">Tanggal & Tempat</th>
+                          <th class="py-3 px-4 text-right">Tindakan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-agenda-table-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="admin-tab-news-edit"
+                class="admin-tab-content hidden space-y-6"
+              >
+                <div
+                  class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100"
+                >
+                  <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+                  >
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900 mb-2">
+                        Manajemen Berita Desa
+                      </h3>
+                      <p class="text-slate-500 text-sm">
+                        Tambahkan, edit, atau hapus artikel berita resmi desa
+                        yang akan ditampilkan kepada warga.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onclick="resetNewsForm()"
+                      class="px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-700 font-semibold rounded-xl text-sm transition-all"
+                    >
+                      Berita Baru
+                    </button>
+                  </div>
+                  <div
+                    class="bg-slate-50 rounded-3xl p-6 border border-slate-200 mb-8"
+                  >
+                    <h4
+                      id="news-form-title"
+                      class="text-lg font-bold text-slate-900 mb-4"
+                    >
+                      Tambah Berita Baru
+                    </h4>
+                    <form
+                      id="admin-news-form"
+                      onsubmit="handleNewsSubmit(event)"
+                      class="space-y-6"
+                    >
+                      <input type="hidden" id="edit-news-id" />
+                      <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label
+                            class="block text-sm font-semibold text-slate-700 mb-2"
+                            >Judul Berita
+                            <span class="text-red-500">*</span></label
+                          >
+                          <input
+                            type="text"
+                            id="news-title"
+                            required
+                            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            class="block text-sm font-semibold text-slate-700 mb-2"
+                            >Tanggal Terbit</label
+                          >
+                          <input
+                            type="text"
+                            id="news-date"
+                            placeholder="Contoh: 30 Juni 2026"
+                            class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Ringkasan Singkat</label
+                        >
+                        <textarea
+                          id="news-summary"
+                          rows="3"
+                          class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Isi Berita</label
+                        >
+                        <textarea
+                          id="news-content"
+                          rows="4"
+                          class="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                        ></textarea>
+                      </div>
+                      <div>
+                        <label
+                          class="block text-sm font-semibold text-slate-700 mb-2"
+                          >Gambar Berita</label
+                        >
+                        <input
+                          type="file"
+                          id="news-image-file"
+                          accept="image/*"
+                          class="block w-full text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                        />
+                      </div>
+                      <div class="flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onclick="resetNewsForm()"
+                          class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="submit"
+                          class="px-5 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-xl transition-all"
+                        >
+                          Simpan Berita
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr
+                          class="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
+                        >
+                          <th class="py-3 px-4">Judul</th>
+                          <th class="py-3 px-4">Tanggal</th>
+                          <th class="py-3 px-4">Ringkasan</th>
+                          <th class="py-3 px-4 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-news-table-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer
+      class="bg-primary-950 text-slate-300 py-16 border-t border-emerald-900/40"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-12 mb-12"
+      >
+        <div>
+          <div class="bg-white/5 rounded-3xl p-6 mb-6">
+            <div class="bg-white rounded-2xl p-4 max-w-full mx-auto shadow-inner flex items-center justify-center h-44">
+              <img src="Logo.jpg" alt="Logo Desa" class="w-full h-full object-contain rounded-md" />
+            </div>
+            <h2
+              class="text-3xl font-extrabold text-emerald-300 text-center mt-6"
+            >
+              Sumberurip X <br> UM BBM Kelompok 2 </br>
+            </h2>
+            <p
+              class="text-xs text-emerald-200 text-center tracking-widest mt-2"
+            >
+              IDENTITAS DIGITAL UMKM DESA
+            </p>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed mb-6">
+            Pusat layanan digital dan inkubator promosi UMKM Desa Sumberurip.
+            Mengayomi, melayani cepat, serta menjaga kemakmuran warga lokal.
+          </p>
+          <div class="flex gap-4">
+            <a
+              href="#"
+              class="w-9 h-9 rounded-full bg-emerald-900/40 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all"
+              ><i class="fa-brands fa-facebook-f text-sm"></i
+            ></a>
+            <a
+              href="#"
+              class="w-9 h-9 rounded-full bg-emerald-900/40 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all"
+              ><i class="fa-brands fa-instagram text-sm"></i
+            ></a>
+            <a
+              href="#"
+              class="w-9 h-9 rounded-full bg-emerald-900/40 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all"
+              ><i class="fa-brands fa-youtube text-sm"></i
+            ></a>
+          </div>
+        </div>
+        <div>
+          <h4
+            class="text-green font-bold tracking-wider mb-6 text-sm uppercase"
+          >
+            Pintasan Layanan
+          </h4>
+          <ul class="space-y-3.5 text-sm">
+            <li>
+              <button
+                onclick="navigateTo('home')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                Halaman Beranda
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('profile')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                Profil Pemerintahan
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('umkm')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                E-Katalog UMKM Warga
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('wilayah')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                Peta Wilayah Spasial
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('agenda')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                Agenda & Kegiatan Desa
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('lapor')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                E-Lapor Pengaduan Warga
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="navigateTo('register-umkm')"
+                class="hover:text-white transition-all text-slate-400 text-left"
+              >
+                Mulai Usaha Anda
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4
+            class="text-green font-bold tracking-wider mb-6 text-sm uppercase"
+          >
+            Hubungi Kantor Desa
+          </h4>
+          <ul class="space-y-4 text-sm text-slate-400">
+            <li class="flex items-start gap-3">
+              <i
+                class="fa-solid fa-location-dot text-emerald-500 mt-1 shrink-0"
+              ></i
+              ><span
+                >Jl. Raya Sumberurip No. 01, Kecamatan Doko, Kabupaten Blitar,
+                Provinsi Jawa Timur</span
+              >
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fa-solid fa-envelope text-emerald-500 shrink-0"></i
+              ><span>info@sumberurip.desa.id</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i class="fa-solid fa-phone text-emerald-500 shrink-0"></i
+              ><span>+62 821-4433-2211</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-emerald-900/30 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500"
+      >
+        <span
+          >&copy; 2026 Pemerintah Desa Sumberurip. All Rights Reserved.</span
+        >
+        <span> Profil Developer Website</span>
+      </div>
+    </footer>
+
+    <!-- Leaflet Interactive Maps JS Engine -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Service Modals: DTKS & KUR -->
+    <div
+      id="modal-dtks"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
+    >
+      <div class="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">Form Ajukan DTKS</h3>
+          <button
+            onclick="closeServiceModal('modal-dtks')"
+            class="text-slate-500 hover:text-slate-700"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form
+          id="form-service-dtks"
+          onsubmit="handleServiceRequestSubmit(event, 'DTKS')"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >NIK</label
+            >
+            <input
+              type="text"
+              id="dtks-nik"
+              readonly
+              class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Nama Lengkap</label
+            >
+            <input
+              type="text"
+              id="dtks-fullname"
+              readonly
+              class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Nomor WhatsApp</label
+            >
+            <input
+              type="tel"
+              id="dtks-whatsapp"
+              required
+              placeholder="08xxxxxxxxxx"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Alamat Lengkap</label
+            >
+            <textarea
+              id="dtks-address"
+              required
+              rows="3"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Kebutuhan / Tujuan</label
+            >
+            <textarea
+              id="dtks-details"
+              required
+              rows="3"
+              placeholder="Jelaskan kebutuhan atau tujuan pengajuan DTKS"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Unggah Dokumen Pendukung (PDF/JPG/PNG)</label
+            >
+            <input
+              type="file"
+              id="dtks-document"
+              accept="application/pdf,image/*"
+              required
+              class="w-full text-sm text-slate-500"
+            />
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              onclick="closeServiceModal('modal-dtks')"
+              class="flex-1 py-3 bg-slate-100 rounded-xl"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="flex-1 py-3 bg-emerald-600 text-white rounded-xl"
+            >
+              Kirim Permohonan DTKS
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="modal-kur"
+      class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4"
+    >
+      <div class="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold">Form Ajukan Kredit Usaha Rakyat</h3>
+          <button
+            onclick="closeServiceModal('modal-kur')"
+            class="text-slate-500 hover:text-slate-700"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form
+          id="form-service-kur"
+          onsubmit="handleServiceRequestSubmit(event, 'KUR')"
+          class="space-y-4"
+        >
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >NIK</label
+            >
+            <input
+              type="text"
+              id="kur-nik"
+              readonly
+              class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Nama Lengkap</label
+            >
+            <input
+              type="text"
+              id="kur-fullname"
+              readonly
+              class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Nomor WhatsApp</label
+            >
+            <input
+              type="tel"
+              id="kur-whatsapp"
+              required
+              placeholder="08xxxxxxxxxx"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Nama Usaha / Pekerjaan</label
+            >
+            <input
+              type="text"
+              id="kur-business"
+              required
+              placeholder="Contoh: Usaha ternak kambing"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Jumlah Modal yang Diajukan</label
+            >
+            <input
+              type="text"
+              id="kur-amount"
+              required
+              placeholder="Contoh: 10.000.000"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Kebutuhan / Tujuan</label
+            >
+            <textarea
+              id="kur-details"
+              required
+              rows="3"
+              placeholder="Jelaskan kebutuhan atau tujuan pengajuan KUR"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Tujuan Penggunaan Dana</label
+            >
+            <textarea
+              id="kur-fund-purpose"
+              required
+              rows="3"
+              placeholder="Jelaskan tujuan penggunaan dana pinjaman"
+              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200"
+            ></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1"
+              >Unggah Dokumen Pendukung (PDF/JPG/PNG)</label
+            >
+            <input
+              type="file"
+              id="kur-document"
+              accept="application/pdf,image/*"
+              required
+              class="w-full text-sm text-slate-500"
+            />
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              onclick="closeServiceModal('modal-kur')"
+              class="flex-1 py-3 bg-slate-100 rounded-xl"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="flex-1 py-3 bg-emerald-600 text-white rounded-xl"
+            >
+              Kirim Permohonan KUR
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function openServiceModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove("hidden");
+      }
+      function closeServiceModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add("hidden");
+      }
+      function handleServiceRequestSubmit(e, type) {
+        e.preventDefault();
+        // Simple confirmation / placeholder handler
+        closeServiceModal(type === "DTKS" ? "modal-dtks" : "modal-kur");
+        const modal = document.getElementById("custom-modal");
+        document.getElementById("modal-title").innerText =
+          "Permohonan Terkirim";
+        document.getElementById("modal-message").innerText =
+          "Terima kasih. Permohonan " +
+          type +
+          " Anda telah dikirim dan akan diproses.";
+        modal.classList.remove("hidden");
+        modal.classList.remove("opacity-0");
+        setTimeout(() => {
+          modal.classList.add("opacity-0");
+          setTimeout(() => modal.classList.add("hidden"), 300);
+        }, 3000);
+      }
+    </script>
+    <!-- ================= SUPABASE ENGINE ================= -->
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

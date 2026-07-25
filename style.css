@@ -1,0 +1,79 @@
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #10b981;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #047857;
+}
+.hero-pattern {
+  background-color: rgba(6, 78, 59, 0.9);
+  position: relative;
+}
+.hero-pattern video {
+  z-index: 1;
+}
+#map-canvas {
+  z-index: 10;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  font-family: "Inter", sans-serif;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+.leaflet-popup-tip {
+  background: white;
+}
+.leaflet-interactive {
+  transition:
+    stroke-width 0.2s,
+    fill-opacity 0.2s;
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.logo-crisp {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.animate-hero-slide {
+  animation: heroSlide 0.8s cubic-bezier(1, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.animate-hero-fade {
+  animation: heroFade 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+@keyframes heroSlide {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes heroFade {
+  to {
+    opacity: 1;
+  }
+}
